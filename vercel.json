@@ -1,21 +1,9 @@
 {
   "version": 2,
-  "routes": [
-    {
-      "src": "/api/score",
-      "dest": "/api/score.js"
-    },
-    {
-      "src": "/participant",
-      "dest": "/participant.html"
-    },
-    {
-      "src": "/admin",
-      "dest": "/admin.html"
-    },
-    {
-      "src": "/",
-      "dest": "/participant.html"
-    }
+  "rewrites": [
+    { "source": "/api/score", "destination": "/api/score.js" },
+    { "source": "/participant", "destination": "/participant.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/", "destination": "/participant.html" }
   ]
 }
