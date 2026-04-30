@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NextWealth Prompt Contest</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#0f2a4a;--blue:#1a5fa8;--gold:#f5a623;--green:#1a7a4a;--red:#c0392b;--bg:#f4f6f9;--surface:#fff;--border:#e0e4ea;--text:#1a1a2e;--text2:#6b7280;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.screen{display:none;min-height:100vh;}.screen.active{display:block;}
+
+/* LANDING */
+.landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;background:linear-gradient(160deg,#f4f6f9 60%,#e8f0fb);}
+.nw-logo{width:72px;height:72px;background:var(--navy);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-family:'Syne',sans-serif;font-weight:700;font-size:26px;color:var(--gold);box-shadow:0 8px 24px rgba(15,42,74,.2);}
+.landing h1{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;margin-bottom:8px;color:var(--navy);}
+.landing .sub{font-size:14px;color:var(--text2);max-width:400px;line-height:1.6;margin-bottom:12px;}
+.info-pills{display:flex;gap:10px;justify-content:center;margin-bottom:32px;flex-wrap:wrap;}
+.pill{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:500;color:var(--navy);}
+.start-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;max-width:420px;width:100%;box-shadow:0 4px 20px rgba(0,0,0,.06);}
+.start-card h2{font-family:'Syne',sans-serif;font-size:17px;margin-bottom:6px;color:var(--navy);}
+.start-card p{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6;}
+.field{margin-bottom:16px;text-align:left;}
+.field label{display:block;font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text2);}
+.field input,.field select{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,95,168,.08);}
+
+/* HEADER */
+.app-header{background:var(--navy);color:white;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:12px;}
+.hlogo{width:34px;height:34px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--navy);}
+.app-header h1{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;}
+.sub-h{font-size:11px;color:rgba(255,255,255,.55);}
+.timer-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;font-family:'Syne',sans-serif;}
+.timer-badge.warn{background:rgba(192,57,43,.25);border-color:#ff6b6b;color:#ff8a80;}
+
+/* QUESTION */
+.form-wrap{max-width:680px;margin:0 auto;padding:24px;}
+.step-indicator{display:flex;align-items:center;gap:6px;margin-bottom:20px;}
+.step-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'Syne',sans-serif;border:2px solid var(--border);color:var(--text2);background:var(--surface);transition:all .2s;}
+.step-dot.done{background:var(--green);border-color:var(--green);color:white;}
+.step-dot.active{background:var(--blue);border-color:var(--blue);color:white;box-shadow:0 0 0 4px rgba(26,95,168,.15);}
+.step-line{flex:1;height:2px;background:var(--border);min-width:8px;transition:background .2s;}
+.step-line.done{background:var(--green);}
+
+.q-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.q-tag{display:inline-block;font-size:10px;font-weight:600;padding:4px 12px;border-radius:20px;margin-bottom:12px;letter-spacing:.5px;text-transform:uppercase;}
+.q-tag.work{background:#dbeafe;color:#1e40af;}
+.q-tag.generic{background:#dcfce7;color:#166534;}
+.q-card h2{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:16px;color:var(--navy);}
+.context-box{background:#f8fafc;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.75;color:var(--text2);margin-bottom:16px;border-left:3px solid var(--blue);}
+.context-box strong{color:var(--text);display:block;margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:.6px;}
+.task-label{font-size:11px;font-weight:600;margin-bottom:6px;color:var(--text);text-transform:uppercase;letter-spacing:.5px;}
+.task-text{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px;padding:10px 14px;background:#fffbeb;border-radius:6px;border-left:3px solid var(--gold);}
+textarea.prompt-input{width:100%;min-height:130px;border:1.5px solid var(--border);border-radius:8px;padding:13px 15px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);resize:vertical;line-height:1.65;transition:border-color .15s;}
+textarea.prompt-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,95,168,.08);}
+.char-count{font-size:11px;color:var(--text2);text-align:right;margin-top:4px;}
+
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:20px;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--blue);color:white;box-shadow:0 2px 8px rgba(26,95,168,.25);}
+.btn-primary:hover{background:#1550a0;}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);}
+.btn-outline:hover{background:#f0f2f5;}
+
+/* SCORING */
+.scoring-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);padding:32px 24px;text-align:center;}
+.scoring-wrap h2{font-family:'Syne',sans-serif;font-size:20px;margin-bottom:8px;color:var(--navy);}
+.score-prog-bar{width:100%;max-width:400px;height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin:16px auto 8px;}
+.score-prog-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .4s;}
+.scoring-log{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;max-height:160px;overflow-y:auto;text-align:left;line-height:2;margin-top:14px;font-family:monospace;}
+.log-ok{color:var(--green);}.log-act{color:var(--blue);font-weight:500;}.log-err{color:var(--red);}
+.spinner{width:18px;height:18px;border:2.5px solid rgba(26,95,168,.2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;margin-bottom:16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* RESULTS */
+.results-wrap{max-width:680px;margin:0 auto;padding:24px;}
+.score-hero{background:var(--navy);border-radius:14px;padding:28px;color:white;text-align:center;margin-bottom:20px;}
+.big-score{font-family:'Syne',sans-serif;font-size:64px;font-weight:700;color:var(--gold);line-height:1;}
+.score-sub{font-size:13px;color:rgba(255,255,255,.5);margin-top:6px;}
+.score-name{font-size:17px;font-weight:500;margin-bottom:6px;}
+.hero-stats{display:flex;justify-content:center;gap:32px;margin-top:16px;}
+.hero-stat .hv{font-size:20px;font-weight:600;}
+.hero-stat .hl{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+.criteria-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.crit-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+.crit-card .cv{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;}
+.crit-card .cl{font-size:10px;color:var(--text2);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
+.q-result{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;}
+.q-result-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.q-result-title{font-size:13px;font-weight:600;color:var(--navy);}
+.q-score-pill{font-size:12px;font-weight:600;padding:4px 14px;border-radius:20px;}
+.pill-high{background:#dcfce7;color:#166534;}.pill-mid{background:#fef9c3;color:#854d0e;}.pill-low{background:#fee2e2;color:#991b1b;}
+.q-feedback{font-size:12px;color:var(--text2);font-style:italic;line-height:1.65;}
+.section-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="s-landing" class="screen active">
+  <div class="landing">
+    <div class="nw-logo">NW</div>
+    <h1>Prompt Engineering Contest</h1>
+    <p class="sub">Test your AI prompting skills across 8 real-world challenges</p>
+    <div class="info-pills">
+      <span class="pill">⏱ 60 Minutes</span>
+      <span class="pill">8 Questions</span>
+      <span class="pill">400 Points Max</span>
+      <span class="pill">Score Instantly</span>
+    </div>
+    <div class="start-card">
+      <h2>Register to begin</h2>
+      <p>Fill in your details. Once you start, you cannot go back to a previous question.</p>
+      <div class="field"><label>Full Name *</label><input id="p-name" placeholder="Your full name" /></div>
+      <div class="field"><label>Email Address *</label><input id="p-email" type="email" placeholder="you@nextwealth.com" /></div>
+      <div class="field"><label>Team / Department *</label><input id="p-team" placeholder="e.g. Data Ops, QA, Engineering" /></div>
+      <div class="field"><label>Prompting Experience</label>
+        <select id="p-exp">
+          <option value="Beginner">Beginner — new to AI prompting</option>
+          <option value="Intermediate">Intermediate — use AI occasionally</option>
+          <option value="Regular">Regular — use AI daily</option>
+          <option value="Advanced">Advanced — studied prompt engineering</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;" onclick="startContest()">Start Contest →</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTION -->
+<div id="s-question" class="screen">
+  <div class="app-header">
+    <div class="logo"><div class="hlogo">NW</div><div><h1>Prompt Contest</h1><div class="sub-h" id="q-header-name"></div></div></div>
+    <div class="timer-badge" id="timer-display">60:00</div>
+  </div>
+  <div class="form-wrap">
+    <div class="step-indicator" id="step-indicator"></div>
+    <div class="q-card">
+      <span class="q-tag" id="q-tag"></span>
+      <h2 id="q-title"></h2>
+      <div class="context-box" id="q-context"></div>
+      <div class="task-label">🎯 Your Task</div>
+      <div class="task-text" id="q-task"></div>
+      <div class="task-label" style="margin-top:16px;">✍️ Write your prompt:</div>
+      <textarea class="prompt-input" id="prompt-input" placeholder="Write a specific, well-structured prompt here...&#10;&#10;Tips:&#10;• Give the AI a role (e.g. 'You are a...')&#10;• Specify the exact output format&#10;• Add constraints ('use only the provided context')" oninput="updateCharCount()"></textarea>
+      <div class="char-count" id="char-count">0 characters</div>
+    </div>
+    <div class="nav-row">
+      <span style="font-size:13px;color:var(--text2);" id="q-progress-label"></span>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline" onclick="skipQuestion()">Skip</button>
+        <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">Save & Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCORING -->
+<div id="s-scoring" class="screen">
+  <div class="app-header">
+    <div class="logo"><div class="hlogo">NW</div><div><h1>Evaluating Prompts</h1><div class="sub-h">Claude AI is scoring your submissions</div></div></div>
+  </div>
+  <div class="scoring-wrap">
+    <div class="spinner"></div>
+    <h2>Scoring your prompts...</h2>
+    <p style="font-size:13px;color:var(--text2);max-width:360px;line-height:1.6;margin-bottom:4px;">Claude AI is evaluating each of your 8 prompts. This takes about 30–60 seconds.</p>
+    <div class="score-prog-bar"><div class="score-prog-fill" id="p-score-fill" style="width:5%"></div></div>
+    <p style="font-size:12px;color:var(--text2);" id="p-score-label">Connecting to scoring engine...</p>
+    <div class="scoring-log" id="p-score-log"></div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="s-results" class="screen">
+  <div class="app-header">
+    <div class="logo"><div class="hlogo">NW</div><div><h1>Your Results</h1><div class="sub-h" id="res-header-sub"></div></div></div>
+  </div>
+  <div class="results-wrap">
+    <div class="score-hero">
+      <div class="score-name" id="res-name"></div>
+      <div class="big-score" id="res-total">0</div>
+      <div class="score-sub">out of 400 points &nbsp;·&nbsp; 8 questions</div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hv" id="res-rank">—</div><div class="hl">Rank</div></div>
+        <div class="hero-stat"><div class="hv" id="res-avg">—</div><div class="hl">Avg / Q</div></div>
+        <div class="hero-stat"><div class="hv" id="res-best">—</div><div class="hl">Best Q</div></div>
+      </div>
+    </div>
+    <p class="section-title">Average score by criterion</p>
+    <div class="criteria-row" id="res-criteria"></div>
+    <p class="section-title">Question by question</p>
+    <div id="res-questions"></div>
+    <div style="text-align:center;margin-top:20px;">
+      <p style="font-size:13px;color:var(--text2);">Thank you for participating! Results will be reviewed by the admin. 🏆</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+
+const QUESTIONS = [
+  {id:1,topic:'Hallucination Control',tag:'work',
+   context:'<strong>Context given to AI:</strong><br>"NextWealth provides AI data services including data annotation, data collection, model evaluation, and human-in-the-loop support."<br><br><strong>User question asked:</strong><br>"Does NextWealth manufacture electric vehicles?"',
+   task:'Write a prompt that prevents the AI from answering beyond the provided context and stops it from making any unsupported claims or using outside knowledge.'},
+  {id:2,topic:'Customer Support Chatbot',tag:'work',
+   context:'<strong>Customer message received:</strong><br>"This is the third time my delivery is delayed. I needed the item today. This is unacceptable."',
+   task:'Write a prompt that makes a chatbot respond with genuine empathy, a sincere apology, and one clear next step — without being defensive. Response must be under 80 words.'},
+  {id:3,topic:'Bias Detection in AI Output',tag:'work',
+   context:'<strong>AI-generated text to review:</strong><br>"Men are usually better suited for technical leadership roles because they are more logical, while women are better at communication roles."',
+   task:'Write a prompt that identifies bias in this AI output, explains why it is problematic, and produces a neutral rewrite.'},
+  {id:4,topic:'Data Classification',tag:'work',
+   context:'<strong>Support tickets to classify:</strong><br>1. "App crashes whenever I upload a PDF."<br>2. "Can I change my billing email?"<br>3. "The dashboard loads very slowly."<br>4. "Please delete my account."<br><br><strong>Allowed categories:</strong> Bug &nbsp;|&nbsp; Account Support &nbsp;|&nbsp; Performance Issue &nbsp;|&nbsp; Data Deletion Request',
+   task:'Write a prompt to classify each ticket into exactly one category. Output format: Ticket ID | Category | One-sentence reason.'},
+  {id:5,topic:'Entity Extraction',tag:'work',
+   context:'<strong>Raw text:</strong><br>"Ravi Kumar from Bengaluru ordered 3 laptops on 12 March 2026. The total value was ₹1,80,000, and delivery is expected by 18 March 2026."',
+   task:'Write a prompt to extract: customer_name, city, item, quantity, order_date, order_value, expected_delivery_date. Return valid JSON only. Missing fields = null.'},
+  {id:6,topic:'Explain LLMs Simply',tag:'generic',
+   context:'<strong>Target audience:</strong> A 12-year-old with no technical background.<br><strong>Concept:</strong> Large Language Models (LLMs).',
+   task:'Write a prompt explaining LLMs using only a cooking or sports analogy. No technical terms. Under 100 words. End with why it matters in everyday life.'},
+  {id:7,topic:'Role-Based Perspectives',tag:'generic',
+   context:'<strong>Topic:</strong> The impact of AI on employment.<br><br><strong>Three perspectives:</strong><br>• An optimist economist<br>• A worried factory worker<br>• A neutral journalist',
+   task:'Write a prompt for three 60-word paragraphs — one per perspective — without the AI expressing its own opinion. Label each clearly.'},
+  {id:8,topic:'Chain-of-Thought Reasoning',tag:'generic',
+   context:'<strong>Scenario:</strong> A customer ordered a laptop but received a tablet instead.<br><br><strong>Policy:</strong> "Refunds are approved for wrong items delivered within 30 days."',
+   task:'Write a prompt making the AI reason step-by-step through each condition before giving a final Approved/Rejected decision with a one-sentence reason.'}
+];
+
+let currentParticipant = null;
+let currentQ = 0;
+let answers = [];
+let timerInterval = null;
+let timeLeft = 3600;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startContest(){
+  const name=document.getElementById('p-name').value.trim();
+  const email=document.getElementById('p-email').value.trim();
+  const team=document.getElementById('p-team').value.trim();
+  if(!name||!email||!team){alert('Please fill in all required fields.');return;}
+  currentParticipant={name,email,team,experience:document.getElementById('p-exp').value,id:Date.now()};
+  answers=new Array(8).fill('');
+  currentQ=0;
+  startTimer();
+  renderQuestion();
+  showScreen('s-question');
+}
+
+function startTimer(){
+  timeLeft=3600;
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    const m=Math.floor(timeLeft/60),s=timeLeft%60;
+    const el=document.getElementById('timer-display');
+    el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    el.className='timer-badge'+(timeLeft<300?' warn':'');
+    if(timeLeft<=0){clearInterval(timerInterval);submitContest();}
+  },1000);
+}
+
+function renderStepIndicator(){
+  document.getElementById('step-indicator').innerHTML=QUESTIONS.map((q,i)=>{
+    const cls=i<currentQ?'done':i===currentQ?'active':'';
+    const line=i<7?`<div class="step-line ${i<currentQ?'done':''}"></div>`:'';
+    return `<div class="step-dot ${cls}">${i+1}</div>${line}`;
+  }).join('');
+}
+
+function renderQuestion(){
+  const q=QUESTIONS[currentQ];
+  document.getElementById('q-header-name').textContent=currentParticipant.name;
+  document.getElementById('q-tag').textContent=q.tag==='work'?'NextWealth Work':'Generic';
+  document.getElementById('q-tag').className='q-tag '+(q.tag==='work'?'work':'generic');
+  document.getElementById('q-title').textContent='Q'+q.id+' of 8 · '+q.topic;
+  document.getElementById('q-context').innerHTML=q.context;
+  document.getElementById('q-task').textContent=q.task;
+  document.getElementById('prompt-input').value=answers[currentQ]||'';
+  document.getElementById('q-progress-label').textContent='Question '+(currentQ+1)+' of 8';
+  document.getElementById('btn-next').textContent=currentQ===7?'Submit All ✓':'Save & Next →';
+  updateCharCount();
+  renderStepIndicator();
+}
+
+function updateCharCount(){
+  const v=document.getElementById('prompt-input').value;
+  document.getElementById('char-count').textContent=v.length+' characters';
+}
+
+function nextQuestion(){
+  answers[currentQ]=document.getElementById('prompt-input').value.trim();
+  if(currentQ===7){submitContest();return;}
+  currentQ++;
+  renderQuestion();
+}
+
+function skipQuestion(){
+  answers[currentQ]='';
+  if(currentQ===7){submitContest();return;}
+  currentQ++;
+  renderQuestion();
+}
+
+function submitContest(){
+  clearInterval(timerInterval);
+  showScreen('s-scoring');
+  runScoring();
+}
+
+function addLog(msg,cls=''){
+  const log=document.getElementById('p-score-log');
+  const d=document.createElement('div');
+  d.className=cls;d.textContent=msg;
+  log.appendChild(d);log.scrollTop=log.scrollHeight;
+}
+
+async function runScoring(){
+  addLog('Submitting to scoring engine...','log-act');
+  try{
+    const res=await fetch(API_BASE+'/api/score',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({participant:currentParticipant,prompts:answers})
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Scoring failed');
+    document.getElementById('p-score-fill').style.width='100%';
+    document.getElementById('p-score-label').textContent='Scoring complete!';
+    addLog('All 8 prompts evaluated ✓','log-ok');
+    setTimeout(()=>renderResults(data),800);
+  }catch(e){
+    addLog('Error: '+e.message,'log-err');
+    document.getElementById('p-score-label').textContent='Error — please contact admin';
+  }
+}
+
+function renderResults(data){
+  const {results,total,rank,totalParticipants}=data;
+  document.getElementById('res-header-sub').textContent=currentParticipant.name+' · '+currentParticipant.team;
+  document.getElementById('res-name').textContent=currentParticipant.name+' · '+currentParticipant.team;
+  document.getElementById('res-total').textContent=total;
+  document.getElementById('res-rank').textContent=rank?'#'+rank+(totalParticipants?' of '+totalParticipants:''):'—';
+  document.getElementById('res-avg').textContent=Math.round(total/8)+' pts';
+  const best=Math.max(...results.map(r=>r.weighted_score||0));
+  document.getElementById('res-best').textContent=best+'/50';
+  const avg=fn=>Math.round(results.reduce((s,r)=>s+(r[fn]||0),0)/8*10)/10;
+  document.getElementById('res-criteria').innerHTML=
+    `<div class="crit-card"><div class="cv" style="color:#1a5fa8">${avg('goal_achievement')}</div><div class="cl">Goal</div></div>
+     <div class="crit-card"><div class="cv" style="color:#1a7a4a">${avg('clarity')}</div><div class="cl">Clarity</div></div>
+     <div class="crit-card"><div class="cv" style="color:#f5a623">${avg('creativity')}</div><div class="cl">Creativity</div></div>
+     <div class="crit-card"><div class="cv" style="color:#7c3aed">${avg('hallucination_control')}</div><div class="cl">Grounding</div></div>`;
+  document.getElementById('res-questions').innerHTML=results.map((r,i)=>{
+    const s=r.weighted_score||0;
+    const pc=s>=38?'pill-high':s>=25?'pill-mid':'pill-low';
+    return `<div class="q-result">
+      <div class="q-result-header">
+        <span class="q-result-title">Q${i+1} · ${QUESTIONS[i].topic}</span>
+        <span class="q-score-pill ${pc}">${s}/50</span>
+      </div>
+      ${r.feedback?`<div class="q-feedback">"${r.feedback}"</div>`:''}
+    </div>`;
+  }).join('');
+  showScreen('s-results');
+}
+</script>
+</body>
+</html>
