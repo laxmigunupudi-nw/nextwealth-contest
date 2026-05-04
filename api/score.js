@@ -40,15 +40,23 @@ async function getSubmissions() {
   try {
     if (!REDIS_URL) return [];
     const res = await redisRequest('GET', '/get/nw_submissions', null);
-    if (res.result) return JSON.parse(res.result);
-    return [];
-  } catch(e) { return []; }
+    if (!res || !res.result) return [];
+    let parsed = res.result;
+    if (typeof parsed === 'string') {
+      parsed = JSON.parse(parsed);
+    }
+    if (typeof parsed === 'string') {
+      parsed = JSON.parse(parsed); // double-encoded
+    }
+    return Array.isArray(parsed) ? parsed : [];
+  } catch(e) { console.error('getSubmissions error:', e.message); return []; }
 }
 
 async function saveSubmissions(submissions) {
   try {
     if (!REDIS_URL) return;
     const value = JSON.stringify(submissions);
+    // Upstash REST API: POST /set/key with body as array [value]
     await redisRequest('POST', '/set/nw_submissions', [value]);
   } catch(e) { console.error('Redis save error:', e.message); }
 }
@@ -56,7 +64,7 @@ async function saveSubmissions(submissions) {
 async function clearSubmissions() {
   try {
     if (!REDIS_URL) return;
-    await redisRequest('POST', '/del/nw_submissions', null);
+    await redisRequest('POST', '/del/nw_submissions', ['nw_submissions']);
   } catch(e) {}
 }
 
