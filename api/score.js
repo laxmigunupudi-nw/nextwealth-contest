@@ -1,11 +1,48 @@
-// api/score.js
+// api/score.js — with Upstash Redis persistent storage
 const https = require('https');
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
+const REDIS_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '';
+const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
 
-let submissions = [];
+// ── REDIS HELPERS ──────────────────────────────────────────────────────────────
+async function redisGet(key) {
+  if (!REDIS_URL) return null;
+  const res = await fetch(`${REDIS_URL}/get/${key}`, {
+    headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
+  });
+  const data = await res.json();
+  return data.result ? JSON.parse(data.result) : null;
+}
 
+async function redisSet(key, value) {
+  if (!REDIS_URL) return;
+  await fetch(`${REDIS_URL}/set/${key}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${REDIS_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value: JSON.stringify(value) })
+  });
+}
+
+async function redisDel(key) {
+  if (!REDIS_URL) return;
+  await fetch(`${REDIS_URL}/del/${key}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
+  });
+}
+
+async function getSubmissions() {
+  const data = await redisGet('nw_submissions');
+  return data || [];
+}
+
+async function saveSubmissions(submissions) {
+  await redisSet('nw_submissions', submissions);
+}
+
+// ── ANTHROPIC ─────────────────────────────────────────────────────────────────
 function callAnthropic(prompt) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
@@ -38,6 +75,7 @@ function callAnthropic(prompt) {
   });
 }
 
+// ── QUESTIONS ─────────────────────────────────────────────────────────────────
 const QUESTIONS = [
   {
     id: 1, topic: 'Multi-Document Hallucination Control',
@@ -92,19 +130,14 @@ async function scoreAllPrompts(prompts) {
     }
     try {
       const sp = `You are an expert prompt engineering evaluator for NextWealth's Advanced Prompt Engineering Contest.
-
 Scenario context: ${q.ctx}
-
 Expected ideal response: ${q.expected}
-
 Participant's prompt: """${prompt}"""
-
 Simulate running this participant's prompt against the scenario context. Then score on 4 criteria (1-5 each):
 1. GOAL_ACHIEVEMENT (40%): Does the simulated output match the expected response?
 2. CLARITY (25%): Is the prompt well-structured with clear output format and constraints?
 3. CREATIVITY (20%): Does it show a clever, original, or distinctive prompting technique?
 4. HALLUCINATION_CONTROL (15%): Does it prevent unsupported claims and handle ambiguity?
-
 Respond in this exact JSON only, no other text:
 {"simulated_response":"...","goal_achievement":N,"clarity":N,"creativity":N,"hallucination_control":N,"feedback":"2 concise sentences of constructive feedback"}`;
 
@@ -131,17 +164,20 @@ function parseBody(req) {
   });
 }
 
+// ── HANDLER ───────────────────────────────────────────────────────────────────
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
+  // GET — fetch all submissions for admin
   if (req.method === 'GET') {
     const { action, password } = req.query;
     if (action === 'all') {
       if (password !== ADMIN_PASSWORD) { res.status(403).json({ error: 'Unauthorized' }); return; }
-      const sorted = [...submissions].sort((a, b) => b.total - a.total);
+      const submissions = await getSubmissions();
+      const sorted = submissions.sort((a, b) => b.total - a.total);
       sorted.forEach((s, i) => s.rank = i + 1);
       res.status(200).json({ submissions: sorted });
       return;
@@ -150,14 +186,16 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // DELETE — clear all data
   if (req.method === 'DELETE') {
     const { password } = req.query;
     if (password !== ADMIN_PASSWORD) { res.status(403).json({ error: 'Unauthorized' }); return; }
-    submissions = [];
+    await redisDel('nw_submissions');
     res.status(200).json({ success: true });
     return;
   }
 
+  // POST — score and save submission
   if (req.method === 'POST') {
     const body = await parseBody(req);
     const { participant, prompts } = body;
@@ -173,9 +211,14 @@ module.exports = async (req, res) => {
       const results = await scoreAllPrompts(prompts);
       const total = Math.round(results.reduce((s, r) => s + (r.weighted_score || 0), 0) * 10) / 10;
       const entry = { participant, prompts, results, total, timestamp: Date.now() };
+
+      // Load, update, save to Redis
+      const submissions = await getSubmissions();
       const idx = submissions.findIndex(s => s.participant.email === participant.email);
       if (idx >= 0) submissions[idx] = entry;
       else submissions.push(entry);
+      await saveSubmissions(submissions);
+
       const sorted = [...submissions].sort((a, b) => b.total - a.total);
       const rank = sorted.findIndex(s => s.participant.email === participant.email) + 1;
       res.status(200).json({ success: true, results, total, rank, totalParticipants: submissions.length });
